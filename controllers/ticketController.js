@@ -1,56 +1,41 @@
 const schema = require("./ticketSchema");
+const pagelimitSchema = require("./pageLimitSchema.js");
 const ticketModel = require("../Models/ticketModel.js");
 const tambola = require("tambola-generator").default;
+const { applyValidation, makeResponse } = require("./helper.js");
 
-const applyValidation = async (object, schema) => {
+exports.fetchAll = async (req, res, next) => {
   try {
-    const validate = await schema.validateAsync(object);
-    return validate;
-  } catch (error) {
-    console.log("error message", error.message);
-    error.errorCode = 400;
-    error.message = error.message.replace(/"/g, "");
-    throw error;
-  }
-};
-
-const createtambola = (id, setOfTicket) => {
-  let a = [];
-  let b = [];
-  let c = [];
-  const arr = setOfTicket.split(",");
-
-  for (let i = 0; i < arr.length; i++) {
-    if (i >= 0 && i < 9) {
-      a.push(arr[i]);
-    } else if (i >= 9 && i < 18) {
-      b.push(arr[i]);
-    } else if (i >= 18) {
-      c.push(arr[i]);
+    if (req.query.limit || req.query.page) {
+      const response = await applyValidation(
+        {
+          limit: req.query.limit,
+          page: req.query.page,
+        },
+        pagelimitSchema
+      );
     }
+  } catch (error) {
+    res.status(error.errorCode || 400).json({
+      status: "Fail",
+      message: error.message,
+    });
+    return;
   }
 
-  return {
-    [id]: [a, b, c],
-  };
-};
-
-const makeResponse = (response) => {
-  const allTickets = response.map((ticket) =>
-    createtambola(ticket.dataValues.id, ticket.dataValues.ticket)
-  );
-
-  let ans = {};
-  allTickets.forEach((ticket) => {
-    ans = { ...ans, ...ticket };
-  });
-  return ans;
-};
-
-exports.fetchAll = (req, res, next) => {
-  console.log("yes");
-
-  console.log(tickets);
+  try {
+    let limit = req.query.limit * 1 || 20;
+    let page = req.query.page * 1 || 1;
+    let offset = limit * (page - 1);
+    const response = await ticketModel.findAll({ offset, limit });
+    let ans = makeResponse(response);
+    res.status(200).json({
+      tickets: ans,
+    });
+    return;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 exports.saveTicket = async (req, res, next) => {
@@ -59,7 +44,7 @@ exports.saveTicket = async (req, res, next) => {
     const result = await applyValidation({ quantity }, schema);
   } catch (error) {
     console.log(error);
-    res.status(error.errorCode).json({
+    res.status(error.errorCode || 400).json({
       status: "Fail",
       message: error.message,
     });
