@@ -3,6 +3,15 @@ const pagelimitSchema = require("./pageLimitSchema.js");
 const ticketModel = require("../Models/ticketModel.js");
 const tambola = require("tambola-generator").default;
 const { applyValidation, makeResponse } = require("./helper.js");
+const {
+  FOURHUNDRED,
+  FIVEHUNDRED,
+  FAIL,
+  INTERNALSERVERERROR,
+  CHECKFINDALLMETHOD,
+  CHECKBULKCREATEMETHOD,
+  BADREQUEST,
+} = require("./CONSTANTS.js");
 
 exports.fetchAll = async (req, res, next) => {
   try {
@@ -16,8 +25,10 @@ exports.fetchAll = async (req, res, next) => {
       );
     }
   } catch (error) {
-    res.status(error.errorCode || 400).json({
-      status: "Fail",
+    console.log(error);
+    res.status(error.errorCode || FOURHUNDRED).json({
+      status: FAIL,
+      errorCode: BADREQUEST,
       message: error.message,
     });
     return;
@@ -35,6 +46,11 @@ exports.fetchAll = async (req, res, next) => {
     return;
   } catch (error) {
     console.log(error);
+    res.status(FIVEHUNDRED).json({
+      status: FAIL,
+      errorCode: INTERNALSERVERERROR,
+      message: CHECKFINDALLMETHOD,
+    });
   }
 };
 
@@ -44,8 +60,9 @@ exports.saveTicket = async (req, res, next) => {
     const result = await applyValidation({ quantity }, schema);
   } catch (error) {
     console.log(error);
-    res.status(error.errorCode || 400).json({
-      status: "Fail",
+    res.status(error.errorCode || FOURHUNDRED).json({
+      status: FAIL,
+      errorCode: BADREQUEST,
       message: error.message,
     });
     return;
@@ -64,5 +81,10 @@ exports.saveTicket = async (req, res, next) => {
     return;
   } catch (error) {
     console.log(error);
+    res.status(FIVEHUNDRED).json({
+      status: FAIL,
+      errorCode: INTERNALSERVERERROR,
+      message: CHECKBULKCREATEMETHOD,
+    });
   }
 };
