@@ -11,6 +11,8 @@ const {
   CHECKFINDALLMETHOD,
   CHECKBULKCREATEMETHOD,
   BADREQUEST,
+  TWOHUNDRED,
+  TWOHUNREDONE,
 } = require("./CONSTANTS.js");
 
 exports.fetchAll = async (req, res, next) => {
@@ -40,7 +42,7 @@ exports.fetchAll = async (req, res, next) => {
     let offset = limit * (page - 1);
     const response = await ticketModel.findAll({ offset, limit });
     let ans = makeResponse(response);
-    res.status(200).json({
+    res.status(TWOHUNDRED).json({
       tickets: ans,
     });
     return;
@@ -75,7 +77,7 @@ exports.saveTicket = async (req, res, next) => {
     }));
     const response = await ticketModel.bulkCreate(setOfTickets);
     const data = makeResponse(response);
-    res.status(201).json({
+    res.status(TWOHUNREDONE).json({
       ticket: data,
     });
     return;
